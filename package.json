@@ -1,0 +1,38 @@
+{
+  "name": "personal-work-life-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test --test-concurrency=1",
+    "test:phase0": "node --test tests/phase0/prd-contract.test.mjs",
+    "test:phase1": "node --test tests/phase1/persistence-spike.test.mjs",
+    "test:phase2": "node --test tests/phase2/app-shell.test.mjs",
+    "test:phase3": "node --experimental-strip-types --test tests/phase3/data-storage.test.mjs",
+    "test:phase4": "node --experimental-strip-types --test tests/phase4/file-connection.test.mjs tests/phase4/file-connection-ui.test.mjs",
+    "test:phase5a": "node --test tests/phase5/today-plan.test.mjs",
+    "test:phase5b": "node --test tests/phase5/work-modules.test.mjs",
+    "test:phase5c": "node --test tests/phase5/life-modules.test.mjs",
+    "test:phase6": "node --experimental-strip-types --test --test-concurrency=1 tests/phase6/agenda.test.mjs tests/phase6/integration.test.mjs",
+    "test:phase7": "node --experimental-strip-types --test --test-concurrency=1 tests/phase7/backup.test.mjs tests/phase7/settings-backup.test.mjs",
+    "test:phase8": "node --test --test-concurrency=1 tests/phase8/launcher.test.mjs",
+    "test:phase9": "node --experimental-strip-types --test --test-concurrency=1 tests/phase9/media-metrics.test.mjs tests/phase9/media-insights.test.mjs",
+    "test:phase10": "node --experimental-strip-types --test --test-concurrency=1 tests/phase10/calendar.test.mjs",
+    "test:phase11": "node --test --test-concurrency=1 tests/phase11/visual-layout.test.mjs",
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "fake-indexeddb": "^6.2.5",
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}
