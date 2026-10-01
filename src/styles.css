@@ -588,6 +588,11 @@ h1 { color: #243a2e; font-size: 32px; }
 .media-insights-empty-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; background: #f1e8dc; color: #956b4d; font-size: 20px; }
 .media-insights-empty strong { color: #564738; font-size: 13px; }
 .media-insights-empty p { margin: 6px 0 0; color: #81796f; font-size: 11px; }
+.media-first-entry { padding: 0 22px 22px; }
+.media-first-entry .media-insights-empty { padding: 15px 0 12px; }
+.media-first-entry-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 11px; padding: 18px; border: 1px solid #eadfd2; border-radius: 14px; background: #faf4eb; }
+.first-video-title-field { grid-column: span 2; }
+.media-first-entry-form > .button { justify-self: start; }
 .media-page .form-panel { border-top: 3px solid #bd926b; }
 .media-page > .module-panel:last-child { border-top: 3px solid #e2c7ad; }
 
@@ -740,6 +745,8 @@ h1 { color: #243a2e; font-size: 32px; }
   .media-intro-stats, .fitness-hero-stats, .diet-hero-stats { gap: 19px; }
   .media-metric-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .metric-entry-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .media-first-entry-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .first-video-title-field { grid-column: 1 / -1; }
   .fitness-day-column { grid-template-columns: 1fr; }
   .consulting-layout { grid-template-columns: 1fr; }
 }

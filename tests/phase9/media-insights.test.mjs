@@ -8,16 +8,13 @@ let app;
 before(async () => { app = await startAppHarness(); });
 after(async () => { await app?.close(); });
 
-test('published media accepts dated metrics and visualizes the trend for all five measures', async () => {
+test('the empty media insights panel creates a published video directly and visualizes all five measures', async () => {
   const context = await app.newContext('media-insights.json');
   const page = await context.newPage();
   await app.connect(page);
   await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '自媒体', exact: true }).click();
-  await page.getByLabel('选题标题').fill('数据统计视频');
-  await page.getByLabel('当前阶段').selectOption('ready');
-  await page.getByRole('button', { name: '添加内容' }).click();
-  await page.getByLabel('更新阶段：数据统计视频').selectOption('published');
-  await page.getByLabel('选择已发布视频').waitFor();
+  await page.getByLabel('首次统计视频标题').waitFor();
+  await page.screenshot({ fullPage: true, path: join(tmpdir(), 'personal-work-life-media-first-entry-review.png') });
 
   const dates = await page.evaluate(() => {
     const result = [];
@@ -33,10 +30,14 @@ test('published media accepts dated metrics and visualizes the trend for all fiv
     for (let index = 0; index < labels.length; index += 1) await page.getByLabel(`视频${labels[index]}`).fill(String(counts[index]));
   };
 
-  await page.getByLabel('视频数据日期').fill(dates[0]);
+  await page.getByLabel('首次统计视频标题').fill('数据统计视频');
+  await page.getByLabel('首次统计日期').fill(dates[0]);
   await inputCounts([1000, 52, 8, 20, 11]);
-  await page.getByRole('button', { name: '保存数据', exact: true }).click();
+  await page.getByRole('button', { name: '创建视频并保存数据', exact: true }).click();
   await page.getByLabel('数据文件状态：已保存 · media-insights.json').waitFor();
+  await page.getByLabel('选择已发布视频').waitFor();
+  assert.equal(await page.getByRole('img', { name: '播放量趋势图' }).locator('.chart-dot').count(), 1);
+
   await page.getByLabel('视频数据日期').fill(dates[1]);
   await inputCounts([1600, 80, 14, 34, 19]);
   await page.getByRole('button', { name: '保存数据', exact: true }).click();

@@ -52,6 +52,10 @@ export default function MediaPage() {
     }));
   }
 
+  function createPublishedItem(item: MediaContent) {
+    updateData((current) => ({ ...current, mediaItems: [...current.mediaItems, item] }));
+  }
+
   const counts = MEDIA_STAGES.map((value) => ({ stage: value, count: data?.mediaItems.filter((item) => item.stage === value).length ?? 0 }));
   const publishedItems = (data?.mediaItems ?? []).filter((item) => item.stage === 'published');
   const inProgressCount = (data?.mediaItems ?? []).filter((item) => item.stage !== 'published').length;
@@ -67,7 +71,7 @@ export default function MediaPage() {
         {counts.map(({ stage: value, count }) => <button className={`workflow-step${filter === value ? ' is-selected' : ''}`} key={value} onClick={() => setFilter(filter === value ? 'all' : value)} type="button"><span>{stageLabels[value]}</span><strong>{count}</strong></button>)}
       </div>
 
-      <MediaInsightsPanel items={publishedItems} onUpdate={updateItem} />
+      <MediaInsightsPanel items={publishedItems} onCreatePublished={createPublishedItem} onUpdate={updateItem} />
 
       <SectionPanel title="新建内容" detail="从选题开始，记录平台、形式和计划发布日期。" className="form-panel">
         <form className="domain-form media-create-form" onSubmit={addContent}>
@@ -94,10 +98,11 @@ export default function MediaPage() {
 const metricLabels: Record<MediaMetricKey, string> = { views: '播放量', likes: '点赞', comments: '评论', saves: '收藏', shares: '分享' };
 const emptyMetricDraft = () => ({ views: '', likes: '', comments: '', saves: '', shares: '' });
 
-function MediaInsightsPanel({ items, onUpdate }: { items: MediaContent[]; onUpdate(id: string, patch: Partial<MediaContent>): void }) {
+function MediaInsightsPanel({ items, onUpdate, onCreatePublished }: { items: MediaContent[]; onUpdate(id: string, patch: Partial<MediaContent>): void; onCreatePublished(item: MediaContent): void }) {
   const [selectedId, setSelectedId] = useState('');
   const [selectedMetric, setSelectedMetric] = useState<MediaMetricKey>('views');
   const [snapshotDate, setSnapshotDate] = useState(localDateValue());
+  const [firstVideoTitle, setFirstVideoTitle] = useState('');
   const [values, setValues] = useState<Record<MediaMetricKey, string>>(emptyMetricDraft());
   const item = items.find((video) => video.id === selectedId) ?? items[0] ?? null;
   const snapshots = (item?.metricsSnapshots ?? []).slice().sort((a, b) => a.date.localeCompare(b.date));
@@ -122,6 +127,24 @@ function MediaInsightsPanel({ items, onUpdate }: { items: MediaContent[]; onUpda
     setValues(emptyMetricDraft());
   }
 
+  function createFirstSnapshot(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!firstVideoTitle.trim()) return;
+    const snapshot: MediaMetricsSnapshot = {
+      ...newRecordBase(), date: snapshotDate,
+      views: Number(values.views || 0),
+      likes: Number(values.likes || 0),
+      comments: Number(values.comments || 0),
+      saves: Number(values.saves || 0),
+      shares: Number(values.shares || 0),
+    };
+    const item: MediaContent = { ...newRecordBase(), title: firstVideoTitle.trim(), stage: 'published', metricsSnapshots: [snapshot] };
+    onCreatePublished(item);
+    setSelectedId(item.id);
+    setFirstVideoTitle('');
+    setValues(emptyMetricDraft());
+  }
+
   function editSnapshot(snapshot: MediaMetricsSnapshot) {
     setSnapshotDate(snapshot.date);
     setValues({ views: String(snapshot.views), likes: String(snapshot.likes), comments: String(snapshot.comments), saves: String(snapshot.saves), shares: String(snapshot.shares) });
@@ -135,7 +158,7 @@ function MediaInsightsPanel({ items, onUpdate }: { items: MediaContent[]; onUpda
 
   return (
     <SectionPanel title="发布后数据" detail="按日期记录平台后台的累计数据，观察作品发布后的表现。" className="media-insights-panel">
-      {items.length === 0 ? <div className="media-insights-empty"><div className="media-insights-empty-mark" aria-hidden="true">↗</div><div><strong>发布一支作品后，就能开始追踪表现</strong><p>将内容阶段更新为“已发布”，再按日期录入播放、互动与分享数据。</p></div></div> : <>
+      {items.length === 0 ? <div className="media-first-entry"><div className="media-insights-empty"><div className="media-insights-empty-mark" aria-hidden="true">↗</div><div><strong>直接记录一支已发布视频</strong><p>填写视频标题和数据，保存后会自动加入已发布内容，并生成趋势图。</p></div></div><form className="media-first-entry-form" onSubmit={createFirstSnapshot}><Field className="first-video-title-field" label="已发布视频标题"><input aria-label="首次统计视频标题" onChange={(event) => setFirstVideoTitle(event.target.value)} placeholder="例如：一周工作复盘" required value={firstVideoTitle} /></Field><Field label="统计日期"><input aria-label="首次统计日期" onChange={(event) => setSnapshotDate(event.target.value)} type="date" value={snapshotDate} required /></Field>{MEDIA_METRICS.map((metric) => <Field key={metric.key} label={metric.label}><input aria-label={`视频${metric.label}`} min="0" onChange={(event) => setValues((current) => ({ ...current, [metric.key]: event.target.value }))} placeholder="0" step="1" type="number" value={values[metric.key]} /></Field>)}<button className="button button-primary" type="submit">创建视频并保存数据</button></form></div> : <>
         <div className="media-insights-toolbar"><Field label="选择已发布视频"><select aria-label="选择已发布视频" onChange={(event) => { setSelectedId(event.target.value); setSnapshotDate(localDateValue()); setValues(emptyMetricDraft()); }} value={item?.id ?? ''}>{items.map((video) => <option key={video.id} value={video.id}>{video.title}</option>)}</select></Field>{latest && <span className="insight-updated">最近记录 · {formatDate(latest.date)}</span>}</div>
         <div className="media-metric-cards">{MEDIA_METRICS.map((metric) => <button aria-pressed={selectedMetric === metric.key} className={`media-metric-card${selectedMetric === metric.key ? ' is-selected' : ''}`} key={metric.key} onClick={() => setSelectedMetric(metric.key)} style={{ '--metric-color': metric.color } as CSSProperties} type="button"><span>{metric.label}</span><strong>{latest ? latest[metric.key].toLocaleString('zh-CN') : '—'}</strong><small>{snapshots.length > 1 && latest ? `共 ${snapshots.length} 次记录` : '点击查看趋势'}</small></button>)}</div>
         <div className="media-insights-body"><div className="media-trend-area"><div className="media-trend-heading"><div><span className="eyebrow">PERFORMANCE TREND</span><h3>{metricLabels[selectedMetric]}趋势</h3></div><span>累计数据</span></div><MetricTrendChart snapshots={snapshots} metric={selectedMetric} />
